@@ -31,6 +31,8 @@ class ProductListScreen extends StatefulWidget{
 class _ProductListScreenState extends State<ProductListScreen>{
   late List<Product> products;
 
+  //ham khoi tao gio hang
+  final Cart cart=Cart();
   //ham khoi tao
   @override
   void initState() {
@@ -41,7 +43,7 @@ class _ProductListScreenState extends State<ProductListScreen>{
   }  
   //ham doc du lieu tu server
   Future<void> fetchProduct() async {
-    final response = await http.get(Uri.parse("http://192.168.1.54/aserver/get.php"));
+    final response = await http.get(Uri.parse("http://192.168.88.139:8080/aserver/get.php"));
     if(response.statusCode==200){
       final Map<String,dynamic > data=json.decode(response.body);
       setState(() {
@@ -100,7 +102,7 @@ class _ProductListScreenState extends State<ProductListScreen>{
                 ),
                 onTap: (){ //click vao item
                   Navigator.push(context,
-                      MaterialPageRoute(builder: (context)=>ProductDetailScreen(products[index]),
+                      MaterialPageRoute(builder: (context)=>ProductDetailScreen(products[index],cart),
                       ));
                 },
               );
@@ -116,7 +118,8 @@ class _ProductListScreenState extends State<ProductListScreen>{
 //dinh nghia lop chi tiet san pham
 class ProductDetailScreen extends StatelessWidget{
   final Product product;
-  ProductDetailScreen(this.product);
+  final Cart cart;
+  ProductDetailScreen(this.product,this.cart);
 //giao dien
   @override
   Widget build(BuildContext context) {
@@ -124,9 +127,16 @@ class ProductDetailScreen extends StatelessWidget{
       appBar: AppBar(
         title: Text('Product Detail'),
         actions: [
-          ElevatedButton(onPressed: (){
+          ElevatedButton(
+            onPressed: (){
+              cart.addToCart(product);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                    content: Text('San pham da duoc them vao gio hang')
+                )
+              );
             Navigator.push(context,
-                MaterialPageRoute(builder: (context)=>CartScreen()),);
+                MaterialPageRoute(builder: (context)=>CartScreen(cart)),);
           }, child: Icon(Icons.shopping_cart),
               style: ElevatedButton.styleFrom(
                 shape: CircleBorder(),
@@ -160,17 +170,32 @@ class ProductDetailScreen extends StatelessWidget{
 }
 
 class CartScreen extends StatelessWidget{
+  final Cart cart;
+  CartScreen(this.cart);
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text("Shopping Cart"),
       ),
-      body: Center(child: Text('Gio hang cua ban'),
-      ),
+      body: ListView.builder(
+        itemCount: cart.item.length,//so luong item
+        itemBuilder: (context,index){
+          return ListTile(
+            title: Text(cart.item[index].search_image),
+            subtitle: Text(cart.item[index].price),
+          );
+        })
     );
   }
 
+}
+//xu ly gio hang
+class Cart{
+  List<Product> item=[];
+  void addToCart(Product p){//them san pham vao gio hang
+    item.add(p);
+  }
 }
 //Android Manifest
 
